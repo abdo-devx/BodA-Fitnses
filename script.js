@@ -454,7 +454,7 @@ function renderHomePage() {
           <div style="width: 75px; height: 75px; margin: 15px auto; background: #fff1f2; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--primary);">
             <i class="fa-solid fa-fire-flame-curved gold-text" style="font-size: 1.8rem;"></i>
           </div>
-          <h4 style="font-size: 1.15rem; margin-bottom: 4px; color: #0f172a;">عمر ت. (خسارة 14 كجم دهون)</h4>
+          <h4 style="font-size: 1.15rem; margin-bottom: 4px; color: #0f172a;">محمد ياسر . (خسارة 8 كجم دهون)</h4>
           <span class="badge approved" style="margin-bottom: 12px;">نحت دهون وحفاظ على العضل</span>
           <p class="text-muted" style="font-size: 0.9rem; line-height: 1.7;">"كنت بقالي سنة وزني ثابت وعصبيتي زايدة من قلة الأكل، كابتن عبد الرحيم ضبط لي كميات الكارب فنزلت دهون بدون هبوط وطاقتي في التمرين رجعت أحسن من الأول."</p>
           <a href="#/success-stories" class="read-more">اقرأ المزيد <i class="fa-solid fa-arrow-left"></i></a>
@@ -468,9 +468,10 @@ function renderHomePage() {
           <div style="width: 75px; height: 75px; margin: 15px auto; background: #fff1f2; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--primary);">
             <i class="fa-solid fa-trophy gold-text" style="font-size: 1.8rem;"></i>
           </div>
-          <h4 style="font-size: 1.15rem; margin-bottom: 4px; color: #0f172a;">محمود س. (تطور كتلة عضلية صافية)</h4>
+          <h4 style="font-size: 1.15rem; margin-bottom: 4px; color: #0f172a;">محمد عبدالمقصود  (تطور كتلة عضلية صافية)</h4>
           <span class="badge approved" style="margin-bottom: 12px;">بناء قوام V-Shape</span>
-          <p class="text-muted" style="font-size: 0.9rem; line-height: 1.7;">"تركيز الكابتن على زوايا الصدر والظهر والأداء بدون إجهاد للمفاصل فرق في مقاسات التيشيرت عندي بشكل ملحوظ خلال 3 شهور بس."</p>
+          <p class="text-muted" style="font-size: 0.9rem; line-height: 1.7;">"مدرب جميل وفاهم فعلا شغله كويس
+ومش مجرد مدرب ده اخ فعلا وفعلا كان في تطور ملحوظ لما تابعت معاه."</p>
           <a href="#/success-stories" class="read-more">اقرأ المزيد <i class="fa-solid fa-arrow-left"></i></a>
         </div>
  
@@ -482,9 +483,9 @@ function renderHomePage() {
           <div style="width: 75px; height: 75px; margin: 15px auto; background: #fff1f2; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--primary);">
             <i class="fa-solid fa-clock gold-text" style="font-size: 1.8rem;"></i>
           </div>
-          <h4 style="font-size: 1.15rem; margin-bottom: 4px; color: #0f172a;">يوسف ع. (شغل 10 ساعات يومياً)</h4>
+          <h4 style="font-size: 1.15rem; margin-bottom: 4px; color: #0f172a;">يوسف محمد  (شغل 10 ساعات يومياً)</h4>
           <span class="badge approved" style="margin-bottom: 12px;">لياقة وصحة واستمرارية</span>
-          <p class="text-muted" style="font-size: 0.9rem; line-height: 1.7;">"ميزة المتابعة مع عبد الرحيم إنه مش بيديك ورقة تمرين وخلاص، كان فاهمني وبيعدل وقت الوجبات والتمرين عشان يناسب مواعيد شغلي الصعبة."</p>
+          <p class="text-muted" style="font-size: 0.9rem; line-height: 1.7;">"جسمي كان من نوع سريع الحرق جدا وكنت بعاني من اللزيادة العضلية دا غير شغلي المرهق كمان كان بيخلي اني ابني عضلات دا شبه مستحيل لغاية ما اتمرنت مع اخويا وصديقي عبدالرحيم وفعلا هو طورني جدا وفرق كبير بس مش بمحرد كلام بس بالنظام الي كان بيمشيه على يومي بالظبط."</p>
           <a href="#/success-stories" class="read-more">اقرأ المزيد <i class="fa-solid fa-arrow-left"></i></a>
         </div>
       </div>
