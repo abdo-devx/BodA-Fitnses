@@ -970,7 +970,7 @@ function renderRegisterPage() {
         <!-- الاسم بالكامل -->
         <div class="form-group" style="margin-bottom: 16px;">
           <label style="display: block; font-weight: 700; color: #334155; margin-bottom: 6px;">الاسم بالكامل</label>
-          <input type="text" id="regFullName" required placeholder="مثال: عبد الرحيم محمد" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
+          <input type="text" id="regFullName" required placeholder="مثال: خالد سلامة " style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
         </div>
  
         <!-- اسم المستخدم -->
