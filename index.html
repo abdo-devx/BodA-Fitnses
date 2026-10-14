@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BodA — Build Your Self | Coach Abdelrahim</title>
+  <title>BodA | Build Your Self</title>
   <meta name="description" content="متابعة تدريب وتغذية أونلاين مع كابتن عبد الرحيم: جدول تمرين 6 أيام ونظام غذائي مخصص ومتابعة أسبوعية.">
   <meta name="theme-color" content="#e11d48">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="BodA — Build Your Self | Coach Abdelrahim">
+  <meta property="og:title" content="BodA | Build Your Self">
   <meta property="og:description" content="منظومة تدريب وتغذية مبنية على العلم والاستمرارية لتحقيق أقوى نسخة من جسمك.">
   <meta property="og:locale" content="ar_EG">
   <!-- خط Cairo الأنيق وأيقونات FontAwesome -->
@@ -15,8 +15,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- أيقونة الموقع (Favicon) -->
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
   <!-- ربط ملف الـ CSS -->
   <link rel="stylesheet" href="style.css">
+  <!-- نظام الرسائل المخصص -->
+  <link rel="stylesheet" href="boda-dialogs.css">
 </head>
 <body>
  
@@ -24,18 +31,8 @@
   <!-- الهيدر وشريط التنقل -->
   <header class="navbar">
     <div class="nav-container">
-      <a href="#/" class="brand-logo" aria-label="BodA — الرئيسية">
-        <svg class="brand-icon" viewBox="0 0 64 36" aria-hidden="true">
-          <rect x="1" y="11" width="6" height="14" rx="2"/>
-          <rect x="9" y="5" width="9" height="26" rx="2.5"/>
-          <rect x="18" y="16" width="28" height="4" rx="1"/>
-          <rect x="46" y="5" width="9" height="26" rx="2.5"/>
-          <rect x="57" y="11" width="6" height="14" rx="2"/>
-        </svg>
-        <span class="brand-text">
-          <span class="brand-name">BodA</span>
-          <span class="sub-text">Build Your Self</span>
-        </span>
+      <a href="#/" class="brand-logo" aria-label="BodA | Build Your Self — الرئيسية">
+        <img class="brand-logo-img" src="assets/images/boda-logo.png" alt="BodA Gym" width="62" height="62" decoding="async">
       </a>
  
       <nav class="nav-links" id="navLinks">
@@ -125,6 +122,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
   <script src="firebase-config.js"></script>
+ 
+  <!-- نظام الرسائل المخصص (لازم قبل script.js) -->
+  <script src="boda-dialogs.js"></script>
  
   <!-- ربط ملف الجافاسكريبت -->
   <script src="script.js"></script>

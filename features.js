@@ -79,10 +79,23 @@ function buildSubscriptionMessage(u) {
   return lines.join('\n');
 }
  
-function openSubscriptionWhatsApp(u) {
+async function openSubscriptionWhatsApp(u) {
   let phone = toWaNumber(u.phone);
   if (!phone) {
-    phone = toWaNumber(prompt('رقم واتساب المتدرب مش متسجل. اكتبه هنا (01xxxxxxxxx):'));
+    const entered = await bodaPrompt({
+      type: 'question',
+      icon: 'fa-brands fa-whatsapp',
+      title: 'رقم واتساب المتدرب',
+      message: 'رقم واتساب المتدرب مش متسجل. اكتبه هنا علشان نبعتله رسالة التأكيد.',
+      label: 'رقم الواتساب',
+      placeholder: '01xxxxxxxxx',
+      inputType: 'tel',
+      validate: v => /^01[0-9]{9}$/.test(String(v).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/\D/g, '')) ? '' : 'اكتب رقم مصري صحيح: 11 رقم ويبدأ بـ 01.',
+      confirmText: 'متابعة',
+      cancelText: 'إلغاء'
+    });
+    if (entered === null) return;
+    phone = toWaNumber(String(entered).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)));
     if (!phone) return;
   }
   showWhatsAppModal({
@@ -264,6 +277,7 @@ async function submitWorkoutNote(i) {
   saveWorkoutProgress(p);
   closeOverlay('wkNoteModal');
   refreshWorkoutPage();
+  bodaToast({ type: 'success', title: 'عاش يا بطل! خطوة جديدة نحو هدفك 🔥' });
  
   const days = workoutDoneDays(p);
   const weekDone = days === 6;
@@ -330,21 +344,21 @@ function getVideoDuration(file) {
 async function handleVideoUpload(e) {
   e.preventDefault();
   const user = state.currentUser;
-  if (!user || !canUseMembers()) { alert('رفع الفيديو للمشتركين المفعّلين فقط.'); return; }
+  if (!user || !canUseMembers()) { bodaNotify('رفع الفيديو للمشتركين المفعّلين فقط.'); return; }
   if (!storage || !db) {
-    alert('رفع الفيديو محتاج تفعيل Firebase Storage. راجع ملف FIREBASE-RULES.md.');
+    bodaNotify('رفع الفيديو محتاج تفعيل Firebase Storage. راجع ملف FIREBASE-RULES.md.');
     return;
   }
   const file = document.getElementById('vidFile').files[0];
-  if (!file) { alert('اختار ملف الفيديو الأول.'); return; }
-  if (!/^video\//.test(file.type)) { alert('الملف لازم يكون فيديو.'); return; }
-  if (file.size > 50 * 1024 * 1024) { alert('حجم الفيديو أكبر من 50 ميجا. اختار فيديو أقصر أو بجودة أقل.'); return; }
+  if (!file) { bodaNotify('اختار ملف الفيديو الأول.'); return; }
+  if (!/^video\//.test(file.type)) { bodaNotify('الملف لازم يكون فيديو.'); return; }
+  if (file.size > 50 * 1024 * 1024) { bodaNotify('حجم الفيديو أكبر من 50 ميجا. اختار فيديو أقصر أو بجودة أقل.'); return; }
  
   const btn = document.getElementById('vidBtn');
   btn.disabled = true;
   const duration = await getVideoDuration(file);
   if (duration > 61) {
-    alert('الفيديو أطول من دقيقة. اختار فيديو قصير (حد أقصى 60 ثانية).');
+    bodaNotify('الفيديو أطول من دقيقة. اختار فيديو قصير (حد أقصى 60 ثانية).');
     btn.disabled = false;
     return;
   }
@@ -385,7 +399,7 @@ async function handleVideoUpload(e) {
       } else {
         msg = 'تعذّر رفع الفيديو' + (code ? ' (' + code + ')' : '') + '، جرّب تاني.';
       }
-      alert(msg);
+      bodaNotify(msg);
       resetUi();
     },
     async () => {
@@ -407,7 +421,7 @@ async function handleVideoUpload(e) {
       } catch (err) {
         console.error(err);
         try { await storage.ref(path).delete(); } catch (e2) { /* ignore */ }
-        alert('حصلت مشكلة في حفظ بيانات الفيديو. راجع قواعد Firestore (FIREBASE-RULES.md).');
+        bodaNotify('حصلت مشكلة في حفظ بيانات الفيديو. راجع قواعد Firestore (FIREBASE-RULES.md).');
         resetUi();
         return;
       }
@@ -478,7 +492,7 @@ async function loadMyVideos() {
 async function playVideo(id) {
   const v = findVideo(id);
   if (!v) return;
-  if (!storage) { alert('تشغيل الفيديو محتاج Firebase Storage.'); return; }
+  if (!storage) { bodaNotify('تشغيل الفيديو محتاج Firebase Storage.'); return; }
   makeOverlay('vidModal', `
     <div class="wk-celebrate-card vid-card" role="dialog" aria-modal="true">
       <h3>${escapeHtml(v.exercise)}${v.name ? ' — ' + escapeHtml(v.name) : ''}</h3>
@@ -498,13 +512,22 @@ async function playVideo(id) {
  
 async function deleteMyVideo(id) {
   const v = findVideo(id);
-  if (!v || !confirm('تحذف الفيديو ده نهائياً؟')) return;
+  if (!v) return;
+  const sure = await bodaConfirm({
+    type: 'danger',
+    icon: 'fa-trash-can',
+    title: 'هل أنت متأكد؟',
+    message: 'تحذف الفيديو ده نهائياً؟ لا يمكن التراجع عن هذا الإجراء بعد تنفيذه.',
+    confirmText: 'تأكيد الحذف',
+    cancelText: 'إلغاء'
+  });
+  if (!sure) return;
   try {
     if (storage) { try { await storage.ref(v.path).delete(); } catch (e) { /* ممكن يكون اتحذف */ } }
     await db.collection('videos').doc(id).delete();
   } catch (err) {
     console.error(err);
-    alert('حصلت مشكلة في الحذف، جرّب تاني.');
+    bodaNotify('حصلت مشكلة في الحذف، جرّب تاني.');
     return;
   }
   loadMyVideos();
@@ -666,7 +689,7 @@ function renderReportCard() {
  
 async function openMonthlyReport(monthKey) {
   const user = state.currentUser;
-  if (!user || !db) { alert('سجّل دخولك الأول.'); return; }
+  if (!user || !db) { bodaNotify('سجّل دخولك الأول.'); return; }
   makeOverlay('reportOverlay', '<div class="rp-loading">جاري تجهيز التقرير...</div>');
   let logs = [];
   let videos = [];
@@ -677,7 +700,7 @@ async function openMonthlyReport(monthKey) {
   } catch (err) {
     console.error(err);
     closeOverlay('reportOverlay');
-    alert('تعذّر تحميل بيانات التقرير. راجع قواعد Firestore (FIREBASE-RULES.md).');
+    bodaNotify('تعذّر تحميل بيانات التقرير. راجع قواعد Firestore (FIREBASE-RULES.md).');
     return;
   }
   try {

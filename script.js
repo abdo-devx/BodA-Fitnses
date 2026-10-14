@@ -29,7 +29,7 @@ if (fbConfigured) {
  
 function requireFirebase() {
   if (fbConfigured) return true;
-  alert('الموقع لسه ماتربطش بـ Firebase. راجع ملف FIREBASE-SETUP.md وضيف الإعدادات في firebase-config.js.');
+  bodaNotify('الموقع لسه ماتربطش بـ Firebase. راجع ملف FIREBASE-SETUP.md وضيف الإعدادات في firebase-config.js.');
   return false;
 }
  
@@ -291,7 +291,7 @@ async function handleRoute() {
       return;
     }
     if (hash !== '#/dashboard' && user.role !== 'admin' && user.role !== 'approved') {
-      alert('المحتوى ده للمشتركين المفعّلين فقط. أتمم الاشتراك وهيتفتح لك فورًا.');
+      bodaNotify('المحتوى ده للمشتركين المفعّلين فقط. أتمم الاشتراك وهيتفتح لك فورًا.');
       window.location.hash = '#/payment';
       return;
     }
@@ -300,13 +300,13 @@ async function handleRoute() {
   // الدفع يحتاج حساب، وبعد التسجيل/الدخول نرجّعه لنفس الصفحة
   if (hash === '#/payment' && !user) {
     sessionStorage.setItem('afterAuth', '#/payment');
-    alert('سجّل حسابك الأول (دقيقة واحدة) وبعدها تكمل الاشتراك.');
+    bodaNotify('سجّل حسابك الأول (دقيقة واحدة) وبعدها تكمل الاشتراك.');
     window.location.hash = '#/register';
     return;
   }
  
   if (hash === '#/admin' && (!user || user.role !== 'admin')) {
-    alert('عفوًا، هذه اللوحة مخصصة للكابتن فقط.');
+    bodaNotify('عفوًا، هذه اللوحة مخصصة للكابتن فقط.');
     window.location.hash = '#/';
     return;
   }
@@ -375,6 +375,15 @@ function updateNav() {
  
 // دالة تسجيل الخروج للعودة لحالة الزائر وتجربة تسجيل الدخول
 async function logoutUser() {
+  const sure = await bodaConfirm({
+    type: 'question',
+    icon: 'fa-right-from-bracket',
+    title: 'تأكيد تسجيل الخروج',
+    message: 'متأكد إنك عايز تخرج من حسابك؟',
+    confirmText: 'تسجيل الخروج',
+    cancelText: 'البقاء في الموقع'
+  });
+  if (!sure) return;
   if (auth) {
     try { await auth.signOut(); } catch (err) { console.error(err); }
   }
@@ -928,10 +937,12 @@ async function handleLoginSubmit(e) {
   const email = document.getElementById('loginEmail').value.trim();
   const pass = document.getElementById('loginPassword').value;
   try {
+    window.__bodaLoginToast = true;   // علشان نظهر إشعار الترحيب بعد نجاح الدخول بس
     await auth.signInWithEmailAndPassword(email, pass);
     // onAuthStateChanged هيحمّل البيانات ويوجّهك للصفحة المناسبة
   } catch (err) {
-    alert(authErrorMessage(err));
+    window.__bodaLoginToast = false;
+    bodaNotify(authErrorMessage(err), { type: 'error' });
   }
 }
  
@@ -940,18 +951,31 @@ async function handleForgotPassword() {
   if (!requireFirebase()) return;
   const field = document.getElementById('loginEmail');
   let email = field ? field.value.trim() : '';
-  if (!email) email = (prompt('اكتب بريدك الإلكتروني وهنبعتلك رابط تغيير كلمة المرور:') || '').trim();
+  if (!email) {
+    const entered = await bodaPrompt({
+      type: 'question',
+      icon: 'fa-envelope',
+      title: 'استرجاع كلمة المرور',
+      message: 'اكتب بريدك الإلكتروني وهنبعتلك رابط تغيير كلمة المرور.',
+      label: 'البريد الإلكتروني',
+      placeholder: 'name@example.com',
+      inputType: 'email',
+      confirmText: 'ابعت الرابط',
+      cancelText: 'إلغاء'
+    });
+    email = (entered || '').trim();
+  }
   if (!email) return;
   try {
     await auth.sendPasswordResetEmail(email);
   } catch (err) {
     if (err.code !== 'auth/user-not-found') {
-      alert(authErrorMessage(err));
+      bodaNotify(authErrorMessage(err), { type: 'error' });
       return;
     }
   }
   // نفس الرسالة سواء البريد موجود أو لأ (عشان ما نكشفش مين مسجل)
-  alert('لو البريد ده مسجل عندنا، هيوصلك رابط تغيير كلمة المرور خلال دقائق. راجع مجلد Spam كمان.');
+  bodaToast({ type: 'info', title: 'راجع بريدك', message: 'لو البريد ده مسجل عندنا، هيوصلك رابط تغيير كلمة المرور خلال دقائق. راجع مجلد Spam كمان.', duration: 8000 });
 }
  
 // ==================== 1. صفحة إنشاء حساب جديد ====================
@@ -1021,7 +1045,7 @@ async function handleRegistrationStep1(e) {
   const btn = e.target && e.target.querySelector ? e.target.querySelector('button[type="submit"]') : null;
  
   if (password.length < 8) {
-    alert('كلمة المرور لازم تكون 8 أحرف على الأقل.');
+    bodaNotify('كلمة المرور لازم تكون 8 أحرف على الأقل.');
     return;
   }
   if (btn) btn.disabled = true;
@@ -1066,7 +1090,7 @@ async function handleRegistrationStep1(e) {
   } catch (err) {
     state.suppressAuth = false;
     console.error(err);
-    alert(authErrorMessage(err));
+    bodaNotify(authErrorMessage(err), { type: 'error' });
     if (auth.currentUser) {
       try { await applyAuthUser(auth.currentUser); } catch (e2) { /* ignore */ }
       updateNav();
@@ -1238,11 +1262,11 @@ async function handleOnboardingSubmit(e) {
     await db.collection('users').doc(state.currentUser.uid).update(updates);
   } catch (err) {
     console.error(err);
-    alert('حصلت مشكلة في حفظ بياناتك، جرّب تاني.');
+    bodaNotify('حصلت مشكلة في حفظ بياناتك، جرّب تاني.');
     return;
   }
   Object.assign(state.profile, updates);
-  alert('عاش يا بطل! تم تجهيز ملفك بنسبة 100%.');
+  bodaToast({ type: 'success', title: 'تم حفظ بياناتك بنجاح ✅', message: 'عاش يا بطل! تم تجهيز ملفك بنسبة 100%.' });
   window.location.hash = postAuthTarget();
 }
  
@@ -1621,11 +1645,11 @@ function handlePaymentSubmit(event, planName, planPrice) {
   const receiptInput = document.getElementById('payReceipt');
  
   if (!/^01[0-9]{9}$/.test(phone)) {
-    alert('رقم الواتساب لازم يكون 11 رقم ويبدأ بـ 01.');
+    bodaNotify('رقم الواتساب لازم يكون 11 رقم ويبدأ بـ 01.');
     return;
   }
   if (!receiptInput.files || receiptInput.files.length === 0) {
-    alert('يرجى إرفاق سكرين شوت الإيصال لتأكيد العملية.');
+    bodaNotify('يرجى إرفاق سكرين شوت الإيصال لتأكيد العملية.');
     return;
   }
  
@@ -1651,7 +1675,7 @@ function handlePaymentSubmit(event, planName, planPrice) {
       if (err.code === 'permission-denied' || errMsg.includes('permission')) {
         errMsg = 'تم رفض العملية من Firebase بسبب قواعد الحماية (Firestore Rules). يرجى مراجعة تبويب Rules في Firebase Console.';
       }
-      alert('حصلت مشكلة في إرسال الطلب: ' + errMsg);
+      bodaNotify('حصلت مشكلة في إرسال الطلب: ' + errMsg);
       return;
     }
  
@@ -1694,7 +1718,7 @@ async function handleDashboardAvatarChange(event) {
   if (!file) return;
  
   if (!state.currentUser) {
-    alert('يجب تسجيل الدخول لتغيير الصورة.');
+    bodaNotify('يجب تسجيل الدخول لتغيير الصورة.');
     return;
   }
  
@@ -1715,22 +1739,22 @@ async function handleDashboardAvatarChange(event) {
         avatarImg.src = newAvatarUrl;
       }
  
-      alert('تم تحديث صورتك الشخصية بنجاح! 🔥');
+      bodaNotify('تم تحديث صورتك الشخصية بنجاح! 🔥');
     } catch (err) {
       console.error(err);
-      alert('حدث خطأ أثناء حفظ الصورة الجديدة، يرجى المحاولة مرة أخرى.');
+      bodaNotify('حدث خطأ أثناء حفظ الصورة الجديدة، يرجى المحاولة مرة أخرى.');
     }
   });
 }
 // دالة تسجيل الحضور اليومي
 async function traineeDailyCheckIn() {
   if (!state.currentUser || !state.profile) {
-    alert('الميزة دي متاحة لحسابات المتدربين فقط.');
+    bodaNotify('الميزة دي متاحة لحسابات المتدربين فقط.');
     return;
   }
   const todayStr = new Date().toDateString();
   if (state.profile.lastCheckIn === todayStr) {
-    alert('لقد سجلت حضورك بالفعل اليوم، ركز في التمرين والاستشفاء!');
+    bodaNotify('لقد سجلت حضورك بالفعل اليوم، ركز في التمرين والاستشفاء!');
     return;
   }
   const updates = { checkIns: (state.profile.checkIns || 0) + 1, lastCheckIn: todayStr };
@@ -1738,61 +1762,87 @@ async function traineeDailyCheckIn() {
     await db.collection('users').doc(state.currentUser.uid).update(updates);
   } catch (err) {
     console.error(err);
-    alert('حصلت مشكلة في تسجيل الحضور، جرّب تاني.');
+    bodaNotify('حصلت مشكلة في تسجيل الحضور، جرّب تاني.');
     return;
   }
   Object.assign(state.profile, updates);
-  alert('عاش يا وحش! 💥 تم تسجيل حضور تمرين النهاردة. استمرارك وصل لـ ' + updates.checkIns + ' يوم تمرين!');
   handleRoute();
+  if (updates.checkIns === 30) {
+    // نفس شرط كارت التحدي: وصل لـ 30 يوم حضور
+    bodaAchievement({
+      title: 'إنجاز جديد يا بطل!',
+      message: 'كملت تحدي الـ30 يوم بنجاح!',
+      subMessage: 'استمر، كل يوم بتقرب أكتر لهدفك.',
+      buttonText: 'واصل رحلتك 🔥'
+    });
+  } else {
+    bodaToast({ type: 'success', title: 'تم تسجيل حضورك 💥', message: 'عاش يا وحش! استمرارك وصل لـ ' + updates.checkIns + ' يوم تمرين!' });
+  }
 }
  
 // دالة تحديث الوزن
 async function updateTraineeWeight() {
   if (!state.currentUser || !state.profile) {
-    alert('الميزة دي متاحة لحسابات المتدربين فقط.');
+    bodaNotify('الميزة دي متاحة لحسابات المتدربين فقط.');
     return;
   }
-  const input = prompt('أدخل وزنك الحالي بالكيلوجرام (على الريق الصبح):');
-  if (input === null) return;
-  const w = parseFloat(input);
-  if (!isFinite(w) || w < 20 || w > 400) {
-    alert('أدخل وزن صحيح بالكيلوجرام.');
-    return;
-  }
+  const w = await bodaPrompt({
+    type: 'weight',
+    title: 'تحديث الوزن الحالي',
+    message: 'تابع تقدمك وسجّل وزنك الحالي (على الريق الصبح).',
+    label: 'الوزن بالكيلوجرام',
+    placeholder: 'مثال: 75',
+    inputType: 'number',
+    unit: 'كجم',
+    min: 20,
+    max: 400,
+    confirmText: 'حفظ الوزن',
+    cancelText: 'إلغاء'
+  });
+  if (w === null) return;
   try {
     await db.collection('users').doc(state.currentUser.uid).update({ currentWeight: w });
   } catch (err) {
     console.error(err);
-    alert('حصلت مشكلة في حفظ الوزن، جرّب تاني.');
+    bodaNotify('حصلت مشكلة في حفظ الوزن، جرّب تاني.');
     return;
   }
   state.profile.currentWeight = w;
-  alert('تم تسجيل وزنك الجديد (' + w + ' كجم). الكابتن هيتابع التطور في التقييم الجاي!');
+  bodaToast({ type: 'success', title: 'تم تحديث وزنك بنجاح ⚖️', message: 'وزنك الجديد ' + w + ' كجم. الكابتن هيتابع التطور في التقييم الجاي!' });
   handleRoute();
 }
  
 // تحديد الوزن اللي المتدرب عايز يوصله
 async function updateTargetWeight() {
   if (!state.currentUser || !state.profile) {
-    alert('الميزة دي متاحة لحسابات المتدربين فقط.');
+    bodaNotify('الميزة دي متاحة لحسابات المتدربين فقط.');
     return;
   }
-  const input = prompt('اكتب الوزن اللي عايز توصله (بالكيلوجرام):', state.profile.targetWeight || '');
-  if (input === null) return;
-  const w = parseFloat(input);
-  if (!isFinite(w) || w < 20 || w > 400) {
-    alert('أدخل وزن صحيح بالكيلوجرام.');
-    return;
-  }
+  const w = await bodaPrompt({
+    type: 'weight',
+    icon: 'fa-bullseye',
+    title: 'تحديد الوزن المستهدف',
+    message: 'اكتب الوزن اللي عايز توصله.',
+    label: 'الوزن المستهدف بالكيلوجرام',
+    placeholder: 'مثال: 75',
+    inputType: 'number',
+    unit: 'كجم',
+    min: 20,
+    max: 400,
+    defaultValue: state.profile.targetWeight || '',
+    confirmText: 'حفظ الهدف',
+    cancelText: 'إلغاء'
+  });
+  if (w === null) return;
   try {
     await db.collection('users').doc(state.currentUser.uid).update({ targetWeight: w });
   } catch (err) {
     console.error(err);
-    alert('حصلت مشكلة في حفظ الهدف، جرّب تاني.');
+    bodaNotify('حصلت مشكلة في حفظ الهدف، جرّب تاني.');
     return;
   }
   state.profile.targetWeight = w;
-  alert('تم تحديد هدفك: ' + w + ' كجم 🎯 الكابتن هيظبط خطتك عليه.');
+  bodaToast({ type: 'success', title: 'تم تحديد هدفك 🎯', message: 'هدفك: ' + w + ' كجم. الكابتن هيظبط خطتك عليه.' });
   handleRoute();
 }
  
@@ -2030,7 +2080,7 @@ function toggleExercise(i, k) {
   refreshWorkoutPage();
 }
  
-function finishWorkoutDay(i) {
+async function finishWorkoutDay(i) {
   const d = WEEK_SCHEDULE[i];
   if (!d || d.rest) return;
   const plan = WORKOUT_PLAN[d.day];
@@ -2038,7 +2088,14 @@ function finishWorkoutDay(i) {
   const p = loadWorkoutProgress();
  
   if (p.done[i]) {
-    if (!confirm('تلغي علامة إنجاز يوم ' + d.label + '؟')) return;
+    const undo = await bodaConfirm({
+      type: 'warning',
+      title: 'إلغاء علامة الإنجاز',
+      message: 'تلغي علامة إنجاز يوم ' + d.label + '؟',
+      confirmText: 'أيوه، ألغيها',
+      cancelText: 'لا، سيبها'
+    });
+    if (!undo) return;
     delete p.done[i];
     saveWorkoutProgress(p);
     refreshWorkoutPage();
@@ -2046,7 +2103,17 @@ function finishWorkoutDay(i) {
   }
  
   const doneCount = plan.exercises.filter((_, k) => p.ex[i + '-' + k]).length;
-  if (doneCount < total && !confirm('لسه فيه ' + (total - doneCount) + ' تمارين مش متعلّم عليها. خلّصت يوم ' + d.label + ' فعلاً؟')) return;
+  const remaining = total - doneCount;
+  const finished = await bodaConfirm({
+    type: 'workout',
+    title: 'خلصت تمرين النهارده؟',
+    message: remaining > 0
+      ? 'لسه فيه ' + remaining + ' تمارين مش متعلّم عليها. خلّصت يوم ' + d.label + ' فعلاً؟'
+      : 'عاش يا بطل! هل خلصت كل التمارين المطلوبة منك النهارده؟',
+    confirmText: 'أيوه، خلصت التمرين',
+    cancelText: 'لسه، هرجع أكمل'
+  });
+  if (!finished) return;
  
   // لازم المتدرب يكتب رأيه في التمرينة قبل ما اليوم يتسجّل (features.js)
   openWorkoutNoteModal(i);
@@ -2247,7 +2314,7 @@ async function handleAdminAvatarChange(event) {
   if (!file) return;
  
   if (!state.currentUser || state.currentUser.role !== 'admin') {
-    alert('هذه الميزة مخصصة لحساب الكابتن فقط.');
+    bodaNotify('هذه الميزة مخصصة لحساب الكابتن فقط.');
     return;
   }
  
@@ -2270,10 +2337,10 @@ async function handleAdminAvatarChange(event) {
         avatarImg.src = newAvatarUrl;
       }
  
-      alert('تم تحديث صورة الكابتن بنجاح! 👑');
+      bodaNotify('تم تحديث صورة الكابتن بنجاح! 👑');
     } catch (err) {
       console.error(err);
-      alert('حدث خطأ أثناء حفظ صورة الكابتن، يرجى المحاولة مرة أخرى.');
+      bodaNotify('حدث خطأ أثناء حفظ صورة الكابتن، يرجى المحاولة مرة أخرى.');
     }
   });
 }
@@ -2564,12 +2631,32 @@ function renderAdminPage() {
 async function giveTraineeFeedback(uid) {
   const target = state.admin.users.find(u => u.id === uid);
   if (!target) return;
-  const rating = parseFloat(prompt('أدخل تقييمك للمتدرب (' + target.name + ') من 5 (مثال: 4.9):', '4.8'));
-  if (!isFinite(rating) || rating < 0 || rating > 5) {
-    alert('التقييم لازم يكون رقم من 0 إلى 5.');
-    return;
-  }
-  const feedback = prompt('أكتب توجيهك وملاحظتك للمتدرب:', 'استمر على نفس القوة، زود جرامات الكارب أيام تمرين الأرجل!');
+  const rating = await bodaPrompt({
+    type: 'question',
+    icon: 'fa-star',
+    title: 'تقييم المتدرب',
+    message: 'أدخل تقييمك للمتدرب (' + target.name + ') من 5.',
+    label: 'التقييم (من 0 إلى 5)',
+    placeholder: 'مثال: 4.9',
+    inputType: 'number',
+    min: 0,
+    max: 5,
+    defaultValue: '4.8',
+    confirmText: 'التالي',
+    cancelText: 'إلغاء'
+  });
+  if (rating === null) return;
+  const feedback = await bodaPrompt({
+    type: 'question',
+    icon: 'fa-comment-dots',
+    title: 'توجيهك للمتدرب',
+    message: 'اكتب توجيهك وملاحظتك للمتدرب (' + target.name + ').',
+    label: 'الملاحظة',
+    inputType: 'textarea',
+    defaultValue: 'استمر على نفس القوة، زود جرامات الكارب أيام تمرين الأرجل!',
+    confirmText: 'إرسال التقييم',
+    cancelText: 'إلغاء'
+  });
   if (!feedback) return;
   // صورة الكابتن بتظهر للمتدرب جنب اسمك في التقييم
   const coachAvatar = (state.adminProfile && state.adminProfile.avatar) ||
@@ -2584,10 +2671,10 @@ async function giveTraineeFeedback(uid) {
     });
   } catch (err) {
     console.error(err);
-    alert('حصلت مشكلة، جرّب تاني.');
+    bodaNotify('حصلت مشكلة، جرّب تاني.');
     return;
   }
-  alert('تم إرسال التقييم والملاحظات لصفحة المتدرب بنجاح!');
+  bodaNotify('تم إرسال التقييم والملاحظات لصفحة المتدرب بنجاح!');
   handleRoute();
 }
  
@@ -2606,10 +2693,10 @@ async function toggleTraineeStatus(uid, newStatus) {
     await db.collection('users').doc(uid).update(upd);
   } catch (err) {
     console.error(err);
-    alert('حصلت مشكلة، جرّب تاني.');
+    bodaNotify('حصلت مشكلة، جرّب تاني.');
     return;
   }
-  alert(newStatus === 'cancelled' ? 'تم إلغاء اشتراك (' + target.name + ') بنجاح.' : 'تمت إعادة تفعيل اشتراك (' + target.name + ')!');
+  bodaNotify(newStatus === 'cancelled' ? 'تم إلغاء اشتراك (' + target.name + ') بنجاح.' : 'تمت إعادة تفعيل اشتراك (' + target.name + ')!');
   handleRoute();
 }
  
@@ -2617,12 +2704,20 @@ async function toggleTraineeStatus(uid, newStatus) {
 async function deleteTrainee(uid) {
   const target = state.admin.users.find(u => u.id === uid);
   if (!target) return;
-  if (!confirm('هيتشال (' + target.name + ') من قائمة المشتركين (حسابه هيفضل موجود كمتدرب غير مفعّل). متأكد؟')) return;
+  const sure = await bodaConfirm({
+    type: 'danger',
+    icon: 'fa-user-xmark',
+    title: 'هل أنت متأكد؟',
+    message: 'هيتشال (' + target.name + ') من قائمة المشتركين، وحسابه هيفضل موجود كمتدرب غير مفعّل.',
+    confirmText: 'تأكيد الحذف',
+    cancelText: 'إلغاء'
+  });
+  if (!sure) return;
   try {
     await db.collection('users').doc(uid).update({ plan: '', price: 0, status: 'pending', planEndsAt: 0 });
   } catch (err) {
     console.error(err);
-    alert('حصلت مشكلة، جرّب تاني.');
+    bodaNotify('حصلت مشكلة، جرّب تاني.');
     return;
   }
   handleRoute();
@@ -2657,7 +2752,7 @@ async function updatePaymentStatus(txnId, newStatus) {
     await db.collection('payments').doc(txnId).update({ status: newStatus });
   } catch (err) {
     console.error(err);
-    alert('حصلت مشكلة أثناء تحديث الطلب. تأكد من الاتصال وجرّب تاني.');
+    bodaNotify('حصلت مشكلة أثناء تحديث الطلب. تأكد من الاتصال وجرّب تاني.');
     return;
   }
   handleRoute();
@@ -2666,7 +2761,7 @@ async function updatePaymentStatus(txnId, newStatus) {
     approvedUser.name = approvedUser.name || target.trainee;
     openSubscriptionWhatsApp(approvedUser);
   } else {
-    alert('تم رفض الطلب (' + target.trainee + ').');
+    bodaNotify('تم رفض الطلب (' + target.trainee + ').');
   }
 }
  
@@ -2721,11 +2816,11 @@ function subscribeCta(event) {
     return;
   }
   if (user.role === 'approved') {
-    alert('أنت مشترك معانا بالفعل ✅ تقدر تدخل على لوحة المتدرب وتكمل تمرينك.');
+    bodaToast({ type: 'info', title: 'أنت مشترك معانا بالفعل ✅', message: 'تقدر تدخل على لوحة المتدرب وتكمل تمرينك.' });
     window.location.hash = '#/dashboard';
     return;
   }
-  alert('أنت مسجّل معانا بالفعل ✅\nاختار إحدى الباقات واشترك علشان تنضم للأبطال 💪');
+  bodaToast({ type: 'info', title: 'أنت مسجّل معانا بالفعل ✅', message: 'اختار إحدى الباقات واشترك علشان تنضم للأبطال 💪' });
   goToPlans();
 }
  
@@ -2735,19 +2830,19 @@ async function claimFreeTrial() {
   if (!user) {
     // بعد التسجيل/الدخول يرجع هنا ويتفعّل تلقائياً
     sessionStorage.setItem('afterAuth', '#/free-trial');
-    alert('سجّل حسابك الأول (دقيقة واحدة) وبعدها تبدأ أسبوعينك المجانيين 🎁');
+    bodaNotify('سجّل حسابك الأول (دقيقة واحدة) وبعدها تبدأ أسبوعينك المجانيين 🎁');
     window.location.hash = '#/register';
     return;
   }
   if (user.role === 'admin') { window.location.hash = '#/admin'; return; }
   if (user.trial) { window.location.hash = '#/dashboard'; return; }
   if (user.role === 'approved') {
-    alert('اشتراكك مفعّل بالفعل ✅');
+    bodaNotify('اشتراكك مفعّل بالفعل ✅');
     window.location.hash = '#/dashboard';
     return;
   }
   if (trialInfo(state.profile).used) {
-    alert('التجربة المجانية اتستخدمت قبل كده على الحساب ده. اشترك علشان تكمّل 💪');
+    bodaNotify('التجربة المجانية اتستخدمت قبل كده على الحساب ده. اشترك علشان تكمّل 💪');
     window.location.hash = '#/payment';
     return;
   }
@@ -2758,7 +2853,7 @@ async function claimFreeTrial() {
     await db.collection('users').doc(user.uid).set({ trialStartedAt: now, trialEndsAt: end }, { merge: true });
   } catch (err) {
     console.error(err);
-    alert('حصلت مشكلة في تفعيل التجربة، جرّب تاني. لو المشكلة فضلت راجع قواعد Firestore.');
+    bodaNotify('حصلت مشكلة في تفعيل التجربة، جرّب تاني. لو المشكلة فضلت راجع قواعد Firestore.');
     window.location.hash = '#/dashboard';
     return;
   }
@@ -2766,7 +2861,7 @@ async function claimFreeTrial() {
   user.role = 'approved';
   user.trial = true;
   updateNav();
-  alert('🎉 اتفعّلت تجربتك المجانية لمدة ' + TRIAL_DAYS + ' يوم! دلوقتي تقدر تشوف جدولك وتمارينك.');
+  bodaNotify('🎉 اتفعّلت تجربتك المجانية لمدة ' + TRIAL_DAYS + ' يوم! دلوقتي تقدر تشوف جدولك وتمارينك.');
   window.location.hash = '#/dashboard';
 }
  
@@ -2909,6 +3004,10 @@ if (!fbConfigured) {
   auth.onAuthStateChanged(async fbUser => {
     if (state.suppressAuth) return;
     await applyAuthUser(fbUser);
+    if (window.__bodaLoginToast && state.currentUser) {
+      window.__bodaLoginToast = false;
+      bodaToast({ type: 'success', title: 'أهلًا بيك في عيلة BODA 💪', message: 'تم تسجيل الدخول بنجاح، جاهز نبدأ؟' });
+    }
     const wasFirst = firstAuthEvent;
     firstAuthEvent = false;
     if (wasFirst) initRouter();

@@ -1,0 +1,293 @@
+/* =====================================================
+   BodA — نظام الرسائل المخصص (Toast / Modal / Confirm / Prompt / Achievement)
+   بيستبدل alert() و confirm() و prompt() الافتراضية للمتصفح.
+   ===================================================== */
+
+:root {
+  --boda-black: #090909;
+  --boda-dark: #171717;
+  --boda-red: #DC143C;
+  --boda-white: #FFFFFF;
+  --boda-border: rgba(220, 20, 60, 0.25);
+
+  --boda-muted: #a1a1aa;
+  --boda-line: rgba(255, 255, 255, 0.10);
+  --boda-success: #22c55e;
+  --boda-error: #ef4444;
+  --boda-warning: #f59e0b;
+  --boda-info: #38bdf8;
+  --boda-gold: #f5c542;
+  --boda-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.boda-ui, .boda-ui * {
+  font-family: 'Cairo', system-ui, -apple-system, 'Segoe UI', Tahoma, sans-serif;
+  box-sizing: border-box;
+}
+.boda-ui { direction: rtl; }
+
+/* منع تمرير الصفحة خلف الرسالة */
+html.boda-lock, html.boda-lock body { overflow: hidden !important; }
+
+/* ================= Modal ================= */
+.boda-overlay {
+  position: fixed;
+  top: var(--boda-vtop, 0px);
+  left: 0;
+  right: 0;
+  height: var(--boda-vh, 100dvh);
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: rgba(0, 0, 0, 0.62);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  animation: bodaFadeIn 0.22s ease both;
+}
+.boda-overlay.is-leaving { animation: bodaFadeOut 0.22s ease both; }
+
+.boda-dialog {
+  position: relative;
+  margin: auto;
+  width: 100%;
+  max-width: 460px;
+  max-height: 100%;
+  overflow-y: auto;
+  color: var(--boda-white);
+  background: linear-gradient(160deg, rgba(30, 30, 32, 0.96) 0%, rgba(9, 9, 9, 0.98) 100%);
+  border: 1px solid var(--boda-border);
+  border-radius: 22px;
+  box-shadow: 0 30px 70px -10px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.03) inset, 0 0 60px -20px rgba(220, 20, 60, 0.45);
+  animation: bodaModalEnter 0.28s var(--boda-ease) both;
+  outline: none;
+}
+.boda-overlay.is-leaving .boda-dialog { animation: bodaModalLeave 0.22s ease both; }
+
+/* خط أحمر رفيع أعلى الرسالة */
+.boda-dialog::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--boda-red), transparent);
+  border-radius: 22px 22px 0 0;
+}
+
+/* ---- Header ---- */
+.boda-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid var(--boda-line);
+}
+.boda-head-icon { width: 34px; height: 34px; object-fit: contain; flex: none; filter: drop-shadow(0 0 8px rgba(220, 20, 60, 0.5)); }
+.boda-head-text { display: flex; flex-direction: column; line-height: 1.15; direction: ltr; text-align: left; }
+.boda-head-name { font-size: 1.15rem; font-weight: 900; letter-spacing: 0.3px; color: var(--boda-white); }
+.boda-head-sub { font-size: 0.72rem; font-weight: 600; color: var(--boda-red); letter-spacing: 0.5px; }
+
+/* ---- Body ---- */
+.boda-body { padding: 26px 24px 8px; text-align: center; }
+.boda-ico {
+  --c: var(--boda-red);
+  width: 68px; height: 68px;
+  margin: 0 auto 16px;
+  display: grid; place-items: center;
+  font-size: 1.9rem;
+  color: var(--c);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--c) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--c) 40%, transparent);
+  box-shadow: 0 0 28px -4px color-mix(in srgb, var(--c) 55%, transparent);
+}
+.boda-ico.t-success { --c: var(--boda-success); }
+.boda-ico.t-error, .boda-ico.t-danger { --c: var(--boda-error); }
+.boda-ico.t-warning { --c: var(--boda-warning); }
+.boda-ico.t-info { --c: var(--boda-info); }
+.boda-ico.t-question, .boda-ico.t-workout, .boda-ico.t-weight { --c: var(--boda-red); }
+.boda-ico.t-achievement { --c: var(--boda-gold); }
+
+.boda-title { margin: 0 0 8px; font-size: 1.35rem; font-weight: 800; line-height: 1.4; color: var(--boda-white); }
+.boda-msg { margin: 0 0 6px; font-size: 1rem; line-height: 1.9; color: #d4d4d8; white-space: pre-line; overflow-wrap: anywhere; }
+
+/* ---- Footer ---- */
+.boda-foot { display: flex; gap: 10px; padding: 18px 24px 24px; }
+.boda-btn {
+  flex: 1 1 0;
+  min-height: 48px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  border: 1px solid transparent;
+  color: var(--boda-white);
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.boda-btn:focus-visible { outline: 2px solid var(--boda-white); outline-offset: 2px; }
+.boda-btn:active { transform: scale(0.97); }
+.boda-btn[disabled] { opacity: 0.6; cursor: not-allowed; }
+.boda-btn-primary { background: linear-gradient(135deg, #f0284d, var(--boda-red) 55%, #a50f2c); box-shadow: 0 8px 22px -8px rgba(220, 20, 60, 0.9); }
+.boda-btn-primary:hover { box-shadow: 0 10px 28px -6px rgba(220, 20, 60, 1); transform: translateY(-1px); }
+.boda-btn-secondary { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.18); color: #e4e4e7; }
+.boda-btn-secondary:hover { background: rgba(255, 255, 255, 0.10); border-color: rgba(255, 255, 255, 0.3); }
+
+/* الإجراءات الخطيرة: زرار التأكيد أحمر غامق بحد واضح + شريط تحذير */
+.boda-v-danger .boda-dialog { border-color: rgba(239, 68, 68, 0.55); box-shadow: 0 30px 70px -10px rgba(0, 0, 0, 0.8), 0 0 70px -15px rgba(239, 68, 68, 0.6); }
+.boda-v-danger .boda-dialog::before { background: repeating-linear-gradient(135deg, var(--boda-error) 0 10px, #450a0a 10px 20px); height: 4px; }
+.boda-v-danger .boda-btn-primary { background: linear-gradient(135deg, #ef4444, #b91c1c); border-color: rgba(255, 255, 255, 0.18); }
+
+/* ---- Prompt ---- */
+.boda-field { margin: 16px 0 4px; text-align: right; }
+.boda-label { display: block; margin-bottom: 8px; font-size: 0.92rem; font-weight: 700; color: #e4e4e7; }
+.boda-input-wrap { position: relative; display: flex; align-items: center; }
+.boda-input {
+  width: 100%;
+  min-height: 50px;
+  padding: 10px 14px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--boda-white);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  -webkit-appearance: none;
+  appearance: none;
+}
+textarea.boda-input { min-height: 96px; resize: vertical; font-weight: 600; line-height: 1.8; font-size: 1rem; }
+.boda-input[dir="ltr"] { text-align: left; }
+.boda-input::placeholder { color: #71717a; font-weight: 500; }
+.boda-input:focus { outline: none; border-color: var(--boda-red); box-shadow: 0 0 0 3px rgba(220, 20, 60, 0.25); }
+.boda-input.is-num { text-align: right; }
+.boda-input.has-unit { padding-left: 64px; }
+.boda-unit { position: absolute; left: 14px; font-size: 0.9rem; font-weight: 700; color: var(--boda-muted); pointer-events: none; }
+.boda-input[aria-invalid="true"] { border-color: var(--boda-error); box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2); }
+.boda-field-error { min-height: 1.4em; margin: 8px 2px 0; font-size: 0.88rem; font-weight: 700; color: #fca5a5; }
+.boda-field-error:empty { min-height: 0; margin: 0; }
+.boda-input.shake { animation: bodaShake 0.35s ease; }
+
+/* ================= Achievement ================= */
+.boda-v-achievement .boda-dialog {
+  border-color: rgba(245, 197, 66, 0.45);
+  background: radial-gradient(120% 80% at 50% 0%, rgba(220, 20, 60, 0.28) 0%, rgba(9, 9, 9, 0) 60%), linear-gradient(160deg, #1d1d20 0%, #090909 100%);
+  box-shadow: 0 30px 80px -10px rgba(0, 0, 0, 0.85), 0 0 90px -10px rgba(220, 20, 60, 0.7);
+  animation: bodaAchieveEnter 0.5s var(--boda-ease) both;
+  overflow: hidden;
+}
+.boda-v-achievement .boda-dialog::before { background: linear-gradient(90deg, transparent, var(--boda-gold), var(--boda-red), var(--boda-gold), transparent); }
+.boda-v-achievement .boda-ico { width: 84px; height: 84px; font-size: 2.4rem; animation: bodaTrophy 1.6s ease-in-out 0.4s 2; }
+.boda-v-achievement .boda-title { font-size: 1.5rem; color: var(--boda-gold); }
+.boda-sub { margin: 8px 0 0; font-size: 0.95rem; color: var(--boda-muted); line-height: 1.8; }
+.boda-confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.boda-confetti i {
+  position: absolute; top: -12px; width: 7px; height: 12px; border-radius: 2px; opacity: 0;
+  animation: bodaConfetti 2.6s ease-out forwards;
+}
+
+/* ================= Toasts ================= */
+.boda-toasts {
+  position: fixed;
+  top: 84px; /* تحت الناف بار علشان ما يغطيش الأزرار */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6000;
+  width: min(420px, calc(100vw - 24px));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+.boda-toast {
+  --c: var(--boda-info);
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 14px 16px;
+  overflow: hidden;
+  color: var(--boda-white);
+  background: linear-gradient(160deg, rgba(28, 28, 30, 0.97), rgba(9, 9, 9, 0.97));
+  border: 1px solid color-mix(in srgb, var(--c) 35%, rgba(255, 255, 255, 0.08));
+  border-radius: 14px;
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.7), 0 0 30px -12px var(--c);
+  pointer-events: auto;
+  animation: bodaToastIn 0.32s var(--boda-ease) both;
+}
+.boda-toast.is-leaving { animation: bodaToastOut 0.22s ease both; }
+.boda-toast.t-success { --c: var(--boda-success); }
+.boda-toast.t-error { --c: var(--boda-error); }
+.boda-toast.t-warning { --c: var(--boda-warning); }
+.boda-toast.t-info { --c: var(--boda-info); }
+.boda-toast-ico { flex: none; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; font-size: 1rem; color: var(--c); background: color-mix(in srgb, var(--c) 16%, transparent); }
+.boda-toast-main { flex: 1; min-width: 0; text-align: right; }
+.boda-toast-title { font-size: 0.98rem; font-weight: 800; line-height: 1.5; overflow-wrap: anywhere; }
+.boda-toast-msg { margin-top: 1px; font-size: 0.88rem; line-height: 1.7; color: #d4d4d8; overflow-wrap: anywhere; }
+.boda-toast-close {
+  flex: none; width: 28px; height: 28px; display: grid; place-items: center;
+  font-size: 0.85rem; color: var(--boda-muted); background: transparent; border: 0; border-radius: 8px; cursor: pointer;
+}
+.boda-toast-close:hover { color: var(--boda-white); background: rgba(255, 255, 255, 0.08); }
+.boda-toast-close:focus-visible { outline: 2px solid var(--boda-white); outline-offset: 1px; }
+.boda-toast-bar { position: absolute; inset: auto 0 0 0; height: 3px; background: rgba(255, 255, 255, 0.08); }
+.boda-toast-bar > span {
+  display: block; height: 100%; background: var(--c); transform-origin: right center;
+  animation: bodaBar linear forwards; animation-duration: var(--boda-dur, 4200ms);
+}
+.boda-toast.is-paused .boda-toast-bar > span { animation-play-state: paused; }
+
+/* ================= Responsive ================= */
+@media (max-width: 480px) {
+  .boda-overlay { padding: 12px; }
+  .boda-body { padding: 22px 18px 6px; }
+  .boda-foot { padding: 16px 18px 20px; flex-direction: column; }
+  .boda-btn { flex: none; width: 100%; min-height: 52px; }
+  .boda-title { font-size: 1.2rem; }
+  .boda-toasts { top: 76px; }
+}
+@media (max-height: 520px) {
+  .boda-ico { display: none; }
+  .boda-body { padding-top: 14px; }
+}
+
+/* ================= Keyframes ================= */
+@keyframes bodaFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes bodaFadeOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes bodaModalEnter {
+  from { opacity: 0; transform: translateY(15px) scale(0.94); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes bodaModalLeave {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(6px) scale(0.96); }
+}
+@keyframes bodaAchieveEnter {
+  0% { opacity: 0; transform: translateY(24px) scale(0.86); }
+  60% { opacity: 1; transform: translateY(-4px) scale(1.02); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes bodaTrophy { 0%, 100% { transform: rotate(0) scale(1); } 25% { transform: rotate(-8deg) scale(1.08); } 75% { transform: rotate(8deg) scale(1.08); } }
+@keyframes bodaToastIn { from { opacity: 0; transform: translateY(-14px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes bodaToastOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-8px) scale(0.97); } }
+@keyframes bodaBar { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+@keyframes bodaShake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
+@keyframes bodaConfetti {
+  0% { opacity: 0; transform: translateY(0) rotate(0deg); }
+  10% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(var(--dy, 340px)) translateX(var(--dx, 0px)) rotate(var(--rot, 540deg)); }
+}
+
+/* احترام إعداد تقليل الحركة */
+@media (prefers-reduced-motion: reduce) {
+  .boda-overlay, .boda-dialog, .boda-toast, .boda-ico, .boda-input.shake,
+  .boda-overlay.is-leaving, .boda-overlay.is-leaving .boda-dialog, .boda-toast.is-leaving { animation: none !important; }
+  .boda-toast-bar > span { animation: none !important; }
+  .boda-toast-bar { display: none; }
+  .boda-confetti { display: none; }
+  .boda-btn, .boda-btn:hover, .boda-btn:active { transition: none; transform: none; }
+}

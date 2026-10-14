@@ -1010,3 +1010,31 @@ html, body { overflow-x: clip; }
   .rp-sheet, .rp-sheet * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .rp-sheet h3, .rp-note, .rp-table tr { break-inside: avoid; }
 }
+
+/* =====================================================
+   اللوجو الرسمي في الناف بار (BodA Gym)
+   ===================================================== */
+.brand-logo { flex: none; border-radius: 16px; }
+.brand-logo-img {
+  display: block;
+  width: 62px;
+  height: 62px;
+  object-fit: contain;
+  background: #000;
+  border-radius: 16px;
+  box-shadow: 0 0 0 1px rgba(220, 20, 60, 0.35), 0 4px 14px rgba(0, 0, 0, 0.18);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.brand-logo:hover .brand-logo-img,
+.brand-logo:focus-visible .brand-logo-img {
+  transform: scale(1.05);
+  box-shadow: 0 0 0 1px rgba(220, 20, 60, 0.7), 0 0 18px rgba(220, 20, 60, 0.45), 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+.brand-logo:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+@media (max-width: 640px) {
+  .brand-logo-img { width: 48px; height: 48px; border-radius: 13px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-logo-img { transition: none; }
+  .brand-logo:hover .brand-logo-img, .brand-logo:focus-visible .brand-logo-img { transform: none; }
+}
